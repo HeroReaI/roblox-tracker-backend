@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     const existingData = await redis.get(key);
 
     if (!existingData) {
-      // User doesn't exist or expired
+      // User doesn't exist or expired (TTL reached)
       return res.status(404).json({
         success: false,
         error: 'User session not found or expired',
@@ -55,20 +55,37 @@ export default async function handler(req, res) {
       });
     }
 
-    // Update heartbeat info
-    existingData.lastHeartbeat = timestamp;
-    existingData.heartbeatCount = (existingData.heartbeatCount || 0) + 1;
-    existingData.updatedAt = timestamp;
+    // Parse and update user data
+    let userData;
+    try {
+      userData = JSON.parse(existingData);
+    } catch (parseError) {
+      // Corrupted data, delete and ask for re-registration
+      await redis.del(key);
+      await redis.zrem(onlineSetKey, sanitizedUserId);
+      
+      return res.status(410).json({
+        success: false,
+        error: 'Session data corrupted',
+        code: 'DATA_CORRUPTED',
+        action: 're-register'
+      });
+    }
 
-    // Save updated data with fresh TTL
-    await redis.setex(key, 90, existingData);
+    // Update heartbeat info
+    userData.lastHeartbeat = timestamp;
+    userData.heartbeatCount = (userData.heartbeatCount || 0) + 1;
+    userData.updatedAt = timestamp;
+
+    // CRITICAL: Save with 90-second TTL (matches cleanup time)
+    await redis.setex(key, 90, JSON.stringify(userData));
     
-    // Update sorted set with new timestamp
+    // Update sorted set with new timestamp (this is what keeps user "online")
     await redis.zadd(onlineSetKey, timestamp, sanitizedUserId);
 
-    // Cleanup inactive users (older than 2 minutes)
-    const twoMinutesAgo = timestamp - 120000;
-    await redis.zremrangebyscore(onlineSetKey, 0, twoMinutesAgo);
+    // CRITICAL: Auto-remove users inactive for 90 seconds
+    const ninetySecondsAgo = timestamp - 90000;
+    await redis.zremrangebyscore(onlineSetKey, 0, ninetySecondsAgo);
 
     // Get updated online count
     const onlineCount = await redis.zcard(onlineSetKey);
@@ -79,19 +96,18 @@ export default async function handler(req, res) {
         userId: sanitizedUserId,
         scriptId: sanitizedScriptId,
         onlineCount,
-        heartbeatCount: existingData.heartbeatCount,
-        nextHeartbeatIn: 30000,
-        timestamp
+        heartbeatCount: userData.heartbeatCount,
+        nextHeartbeatIn: 30000, // 30 seconds
+        timestamp,
+        secondsSinceLastActive: 0 // Just updated
       }
     });
 
   } catch (error) {
     console.error('Heartbeat error:', error);
-
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Internal server error'
     });
   }
 }
