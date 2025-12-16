@@ -1,4 +1,4 @@
-import { redis } from '../../lib/redis';
+import { redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -21,29 +21,29 @@ export default async function handler(req, res) {
     const { userId, scriptId, userInfo = {} } = req.body;
 
     // Validate input
-    if (!userId || typeof userId !== 'string') {
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid userId (string) is required'
+        error: 'Valid userId (non-empty string) is required'
       });
     }
 
-    if (!scriptId || typeof scriptId !== 'string') {
+    if (!scriptId || typeof scriptId !== 'string' || scriptId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid scriptId (string) is required'
+        error: 'Valid scriptId (non-empty string) is required'
       });
     }
 
-    // Sanitize scriptId (alphanumeric, dashes, underscores only)
-    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '');
-    const sanitizedUserId = userId.substring(0, 100); // Limit length
-
+    // Sanitize inputs
+    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
+    const sanitizedUserId = userId.substring(0, 100);
+    
     const key = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
     const onlineSetKey = `script:${sanitizedScriptId}:online`;
     const timestamp = Date.now();
 
-    // Generate session ID if not provided
+    // Generate session ID
     const sessionId = userInfo.sessionId || 
       Math.random().toString(36).substring(2, 15) + 
       Math.random().toString(36).substring(2, 15);
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     };
 
     // Execute Redis operations
-    await redis.setex(key, 90, JSON.stringify(userData));
+    await redis.setex(key, 90, userData);
     await redis.zadd(onlineSetKey, timestamp, sanitizedUserId);
 
     // Cleanup old entries (older than 2 minutes)
@@ -73,9 +73,6 @@ export default async function handler(req, res) {
     // Get current online count
     const onlineCount = await redis.zcard(onlineSetKey);
 
-    // Log registration (optional)
-    console.log(`[Register] ${sanitizedUserId} - Script: ${sanitizedScriptId} - Total: ${onlineCount}`);
-
     return res.status(200).json({
       success: true,
       data: {
@@ -83,7 +80,7 @@ export default async function handler(req, res) {
         scriptId: sanitizedScriptId,
         sessionId,
         onlineCount,
-        nextHeartbeatIn: 30000, // milliseconds
+        nextHeartbeatIn: 30000,
         timestamp
       }
     });
