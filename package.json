@@ -2,14 +2,13 @@
   "name": "roblox-tracker-backend",
   "version": "1.0.0",
   "description": "Real-time user tracking system for Roblox scripts",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
-  "dependencies": {
-    "ioredis": "^5.3.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "vercel": "^33.0.0"
   },
