@@ -1,4 +1,4 @@
-import { redis } from '../../lib/redis';
+import { redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -21,36 +21,32 @@ export default async function handler(req, res) {
     const { userId, scriptId } = req.body;
 
     // Validate input
-    if (!userId || typeof userId !== 'string') {
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid userId (string) is required'
+        error: 'Valid userId (non-empty string) is required'
       });
     }
 
-    if (!scriptId || typeof scriptId !== 'string') {
+    if (!scriptId || typeof scriptId !== 'string' || scriptId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid scriptId (string) is required'
+        error: 'Valid scriptId (non-empty string) is required'
       });
     }
 
-    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
     const sanitizedUserId = userId.substring(0, 100);
     
     const key = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
     const onlineSetKey = `script:${sanitizedScriptId}:online`;
 
     // Remove user from tracking
-    const [deleteResult, removeResult] = await Promise.all([
-      redis.del(key),
-      redis.zrem(onlineSetKey, sanitizedUserId)
-    ]);
+    await redis.del(key);
+    await redis.zrem(onlineSetKey, sanitizedUserId);
 
     // Get updated online count
     const onlineCount = await redis.zcard(onlineSetKey);
-
-    console.log(`[Unregister] ${sanitizedUserId} - Script: ${sanitizedScriptId} - Remaining: ${onlineCount}`);
 
     return res.status(200).json({
       success: true,
@@ -58,7 +54,6 @@ export default async function handler(req, res) {
         userId: sanitizedUserId,
         scriptId: sanitizedScriptId,
         onlineCount,
-        removed: deleteResult > 0,
         timestamp: Date.now()
       }
     });
