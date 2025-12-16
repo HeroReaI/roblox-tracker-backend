@@ -24,11 +24,11 @@ export default async function handler(req, res) {
 
     const onlineSetKey = `script:${sanitizedScriptId}:online`;
 
-    // Cleanup inactive users first (older than 2 minutes)
-    const twoMinutesAgo = timestamp - 120000;
-    await redis.zremrangebyscore(onlineSetKey, 0, twoMinutesAgo);
+    // CRITICAL: Auto-remove users inactive for 90 seconds
+    const ninetySecondsAgo = timestamp - 90000; // 90,000ms = 90 seconds
+    await redis.zremrangebyscore(onlineSetKey, 0, ninetySecondsAgo);
 
-    // Get online count
+    // Get current online count AFTER cleanup
     const onlineCount = await redis.zcard(onlineSetKey);
 
     // Get detailed user info if requested
@@ -42,21 +42,26 @@ export default async function handler(req, res) {
       // Process users
       for (let i = 0; i < usersWithScores.length; i += 2) {
         const userId = usersWithScores[i];
-        const score = parseInt(usersWithScores[i + 1]);
-        const key = `script:${sanitizedScriptId}:user:${userId}`;
+        const lastActive = parseInt(usersWithScores[i + 1]);
+        const secondsAgo = Math.floor((timestamp - lastActive) / 1000);
         
-        try {
-          const userData = await redis.get(key);
-          if (userData) {
-            detailedUsers.push({
-              userId,
-              ...userData,
-              lastActive: score,
-              secondsAgo: Math.floor((timestamp - score) / 1000)
-            });
+        // Only include users active within 90 seconds
+        if (secondsAgo < 90) {
+          try {
+            const key = `script:${sanitizedScriptId}:user:${userId}`;
+            const userData = await redis.get(key);
+            if (userData) {
+              detailedUsers.push({
+                userId,
+                ...userData,
+                lastActive,
+                secondsAgo,
+                status: secondsAgo < 30 ? 'active' : 'idle'
+              });
+            }
+          } catch (e) {
+            // Skip corrupted data
           }
-        } catch (e) {
-          // Skip corrupted data
         }
       }
     }
@@ -68,17 +73,16 @@ export default async function handler(req, res) {
         onlineCount,
         detailedUsers: includeDetails ? detailedUsers : undefined,
         timestamp,
-        cleanupThresholdSeconds: 120
+        cleanupThresholdSeconds: 90, // Shows 90s in dashboard
+        lastCleanup: ninetySecondsAgo
       }
     });
 
   } catch (error) {
     console.error('Status error:', error);
-
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Internal server error'
     });
   }
 }
