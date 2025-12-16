@@ -1,4 +1,4 @@
-import { redis } from '../../lib/redis';
+import { redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   try {
     const { scriptId = 'default', detailed = 'false' } = req.query;
-    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
     const timestamp = Date.now();
 
     const onlineSetKey = `script:${sanitizedScriptId}:online`;
@@ -36,51 +36,29 @@ export default async function handler(req, res) {
     const includeDetails = detailed === 'true' || detailed === '1';
 
     if (includeDetails && onlineCount > 0) {
-      // Get all user IDs from sorted set
-      const userIds = await redis.zrange(onlineSetKey, 0, -1);
+      // Get all user IDs from sorted set with scores
+      const usersWithScores = await redis.zrange(onlineSetKey, 0, -1, true);
       
-      // Get detailed info for each user
-      const userPromises = userIds.map(async (userId) => {
+      // Process users
+      for (let i = 0; i < usersWithScores.length; i += 2) {
+        const userId = usersWithScores[i];
+        const score = parseInt(usersWithScores[i + 1]);
         const key = `script:${sanitizedScriptId}:user:${userId}`;
-        const userData = await redis.get(key);
         
-        if (userData) {
-          try {
-            const parsedData = JSON.parse(userData);
-            const lastActive = parsedData.lastHeartbeat || timestamp;
-            const secondsAgo = Math.floor((timestamp - lastActive) / 1000);
-            
-            return {
+        try {
+          const userData = await redis.get(key);
+          if (userData) {
+            detailedUsers.push({
               userId,
-              ...parsedData,
-              lastActive,
-              secondsAgo,
-              ttl: await redis.ttl(key)
-            };
-          } catch (e) {
-            return { userId, error: 'Failed to parse data' };
+              ...userData,
+              lastActive: score,
+              secondsAgo: Math.floor((timestamp - score) / 1000)
+            });
           }
-        }
-        return { userId, error: 'No data found' };
-      });
-
-      detailedUsers = await Promise.all(userPromises);
-    }
-
-    // Get Redis memory info (if available)
-    let memoryInfo = {};
-    try {
-      // This might not work on all Redis instances
-      const memory = await redisCommand('INFO', 'memory');
-      if (memory && typeof memory === 'string') {
-        const usedMatch = memory.match(/used_memory:(\d+)/);
-        if (usedMatch) {
-          memoryInfo.usedMemory = parseInt(usedMatch[1]);
-          memoryInfo.usedMemoryMB = (memoryInfo.usedMemory / 1024 / 1024).toFixed(2);
+        } catch (e) {
+          // Skip corrupted data
         }
       }
-    } catch (e) {
-      // Ignore memory info errors
     }
 
     return res.status(200).json({
@@ -89,11 +67,8 @@ export default async function handler(req, res) {
         scriptId: sanitizedScriptId,
         onlineCount,
         detailedUsers: includeDetails ? detailedUsers : undefined,
-        userCount: onlineCount,
         timestamp,
-        cleanupThresholdSeconds: 120,
-        memory: memoryInfo.usedMemoryMB ? memoryInfo : undefined,
-        uptime: process.uptime()
+        cleanupThresholdSeconds: 120
       }
     });
 
