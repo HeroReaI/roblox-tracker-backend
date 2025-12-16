@@ -1,4 +1,4 @@
-import { redis } from '../../lib/redis';
+import { redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -21,21 +21,21 @@ export default async function handler(req, res) {
     const { userId, scriptId } = req.body;
 
     // Validate input
-    if (!userId || typeof userId !== 'string') {
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid userId (string) is required'
+        error: 'Valid userId (non-empty string) is required'
       });
     }
 
-    if (!scriptId || typeof scriptId !== 'string') {
+    if (!scriptId || typeof scriptId !== 'string' || scriptId.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Valid scriptId (string) is required'
+        error: 'Valid scriptId (non-empty string) is required'
       });
     }
 
-    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
     const sanitizedUserId = userId.substring(0, 100);
     
     const key = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
@@ -55,30 +55,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // Parse and update user data
-    let userData;
-    try {
-      userData = JSON.parse(existingData);
-    } catch (parseError) {
-      // Corrupted data, delete and ask for re-registration
-      await redis.del(key);
-      await redis.zrem(onlineSetKey, sanitizedUserId);
-      
-      return res.status(410).json({
-        success: false,
-        error: 'Session data corrupted',
-        code: 'DATA_CORRUPTED',
-        action: 're-register'
-      });
-    }
-
     // Update heartbeat info
-    userData.lastHeartbeat = timestamp;
-    userData.heartbeatCount = (userData.heartbeatCount || 0) + 1;
-    userData.updatedAt = timestamp;
+    existingData.lastHeartbeat = timestamp;
+    existingData.heartbeatCount = (existingData.heartbeatCount || 0) + 1;
+    existingData.updatedAt = timestamp;
 
     // Save updated data with fresh TTL
-    await redis.setex(key, 90, JSON.stringify(userData));
+    await redis.setex(key, 90, existingData);
     
     // Update sorted set with new timestamp
     await redis.zadd(onlineSetKey, timestamp, sanitizedUserId);
@@ -90,18 +73,13 @@ export default async function handler(req, res) {
     // Get updated online count
     const onlineCount = await redis.zcard(onlineSetKey);
 
-    // Log heartbeat (optional)
-    if (userData.heartbeatCount % 10 === 0) {
-      console.log(`[Heartbeat] ${sanitizedUserId} - Count: ${userData.heartbeatCount} - Total: ${onlineCount}`);
-    }
-
     return res.status(200).json({
       success: true,
       data: {
         userId: sanitizedUserId,
         scriptId: sanitizedScriptId,
         onlineCount,
-        heartbeatCount: userData.heartbeatCount,
+        heartbeatCount: existingData.heartbeatCount,
         nextHeartbeatIn: 30000,
         timestamp
       }
