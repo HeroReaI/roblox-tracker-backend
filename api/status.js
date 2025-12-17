@@ -18,8 +18,8 @@ export default async function handler(req, res) {
 
     const onlineKey = `script:${sanitizedScriptId}:online`;
 
-    // Cleanup expired users
-    await redis.zremrangebyscore(onlineKey, 0, now - ttlSeconds * 1000);
+    // Cleanup expired users (90 seconds)
+    await redis.zremrangebyscore(onlineKey, 0, now - (ttlSeconds * 1000));
 
     const onlineCount = await redis.zcard(onlineKey);
     const includeDetails = detailed === 'true' || detailed === '1';
@@ -27,15 +27,16 @@ export default async function handler(req, res) {
     let detailedUsers = [];
 
     if (includeDetails && onlineCount > 0) {
-      const entries = await redis.zrange(
-        onlineKey,
-        0,
-        -1,
-        { withScores: true }
-      );
-
-      for (const { member: userId, score: lastActive } of entries) {
+      // FIXED: Use correct parameter format for zrange
+      const usersWithScores = await redis.zrange(onlineKey, 0, -1, true);
+      
+      // Process users in pairs (userId, score, userId, score...)
+      for (let i = 0; i < usersWithScores.length; i += 2) {
+        const userId = usersWithScores[i];
+        const lastActive = parseInt(usersWithScores[i + 1]);
         const secondsAgo = Math.floor((now - lastActive) / 1000);
+        
+        // Skip if expired (shouldn't happen due to cleanup above)
         if (secondsAgo >= ttlSeconds) continue;
 
         const userKey = `script:${sanitizedScriptId}:user:${userId}`;
@@ -44,23 +45,21 @@ export default async function handler(req, res) {
 
         try {
           const parsed = JSON.parse(raw);
+          const startTime = parsed.userInfo?.startTime || parsed.registeredAt || now;
+          const uptimeSeconds = Math.floor((now - startTime) / 1000);
 
           detailedUsers.push({
-            userId,
-            userInfo: {
-              sessionId: parsed.sessionId,
-              executor: parsed.userInfo?.executor,
-              playerName: parsed.userInfo?.playerName,
-              profileUrl: parsed.userInfo?.profileUrl,
-              jobId: parsed.userInfo?.jobId
-            },
+            userId: userId,
+            sessionId: parsed.sessionId,
+            userInfo: parsed.userInfo || {},
             heartbeatCount: parsed.heartbeatCount || 1,
-            lastActive,
-            secondsAgo,
+            lastActive: lastActive,
+            secondsAgo: secondsAgo,
+            uptimeSeconds: uptimeSeconds,
             status: secondsAgo < 30 ? 'active' : 'idle'
           });
-        } catch {
-          // skip corrupted entries
+        } catch (e) {
+          console.log('Skipping corrupted user data for:', userId);
         }
       }
     }
@@ -70,9 +69,9 @@ export default async function handler(req, res) {
       data: {
         scriptId: sanitizedScriptId,
         onlineCount,
-        detailedUsers,
+        detailedUsers: includeDetails ? detailedUsers : undefined,
         timestamp: now,
-        ttlSeconds
+        cleanupThresholdSeconds: ttlSeconds
       }
     });
 
