@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, scriptId } = req.body; // REMOVED sessionId requirement
+    const { userId, scriptId } = req.body;
     if (!userId || !scriptId) {
       return res.status(400).json({
         success: false,
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     const userKey = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
     const onlineKey = `script:${sanitizedScriptId}:online`;
 
-    // Try to delete user data (don't check if it exists first)
+    // Remove user (don't check if exists first)
     await redis.del(userKey);
     await redis.zrem(onlineKey, sanitizedUserId);
 
