@@ -281,12 +281,12 @@
             word-break: break-word;
         }
         
-        .profile-link {
+        .detail-value a {
             color: #3498db;
             text-decoration: none;
         }
         
-        .profile-link:hover {
+        .detail-value a:hover {
             text-decoration: underline;
         }
         
@@ -344,6 +344,14 @@
             100% { opacity: 1; }
         }
         
+        .no-users {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+        
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -384,11 +392,15 @@
             </div>
             
             <div class="stats-grid" id="statsGrid">
-                <!-- Stats will load here -->
+                <div class="stat-card">
+                    <div class="loading-spinner"></div>
+                    <div>Loading statistics...</div>
+                </div>
             </div>
             
             <div class="users-list" id="usersList">
-                <!-- Users will load here -->
+                <div class="loading-spinner"></div>
+                <div class="loading">Loading user data...</div>
             </div>
         </div>
     </div>
@@ -404,21 +416,27 @@
         let autoRefreshInterval = null;
         let isLoading = false;
         
-        // Format time
+        // Format time (seconds to MM:SS or Xm Ys)
         function formatTime(seconds) {
+            if (!seconds) return '0s';
             if (seconds < 60) return seconds + 's';
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
-            return `${mins}m ${secs}s`;
+            if (mins < 60) return `${mins}m ${secs}s`;
+            const hours = Math.floor(mins / 60);
+            const remainingMins = mins % 60;
+            return `${hours}h ${remainingMins}m`;
         }
         
         // Get initials for avatar
         function getInitials(name) {
-            return name ? name.charAt(0).toUpperCase() : '?';
+            if (!name || name === 'Unknown') return '?';
+            return name.charAt(0).toUpperCase();
         }
         
-        // Format date
+        // Format date from timestamp
         function formatDate(timestamp) {
+            if (!timestamp) return 'Unknown';
             const date = new Date(timestamp);
             return date.toLocaleTimeString();
         }
@@ -433,19 +451,6 @@
             
             const scriptId = scriptIdInput.value.trim() || 'default';
             const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
-            
-            // Show loading states
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="loading-spinner"></div>
-                    <div>Loading statistics...</div>
-                </div>
-            `;
-            
-            usersList.innerHTML = `
-                <div class="loading-spinner"></div>
-                <div class="loading">Loading user data...</div>
-            `;
             
             try {
                 const response = await fetch(`${apiUrl}/api/status?scriptId=${scriptId}&detailed=true`);
@@ -501,7 +506,7 @@
             }
         }
         
-        // Update statistics
+        // Update statistics section
         function updateStats(data) {
             const lastUpdate = formatDate(data.timestamp);
             const activeUsers = data.detailedUsers?.filter(user => user.secondsAgo < 30).length || 0;
@@ -528,7 +533,7 @@
             `;
         }
         
-        // Update users list
+        // Update users list section
         function updateUsersList(data) {
             if (!data.detailedUsers || data.detailedUsers.length === 0) {
                 usersList.innerHTML = `
@@ -536,7 +541,10 @@
                         <h3>Online Users</h3>
                         <span class="user-count">0 users</span>
                     </div>
-                    <div class="loading">No users currently online for script "${data.scriptId}"</div>
+                    <div class="no-users">
+                        No users currently online for script "${data.scriptId}"<br>
+                        <small>Users will appear here when they run your script</small>
+                    </div>
                 `;
                 return;
             }
@@ -560,6 +568,7 @@
                 const statusClass = isActive ? 'status-online' : 'status-idle';
                 const statusText = isActive ? 'Active now' : `${user.secondsAgo}s ago`;
                 const uptime = user.uptimeSeconds || 0;
+                const heartbeats = user.heartbeatCount || 1;
                 
                 usersHTML += `
                     <div class="user-card">
@@ -567,7 +576,7 @@
                             <div class="user-avatar">${initials}</div>
                             <div class="user-main">
                                 <div class="user-name">${playerName}</div>
-                                <div class="user-id">ID: ${user.userId?.substring(0, 20) || 'N/A'}...</div>
+                                <div class="user-id">${user.userId?.substring(0, 20) || 'Unknown'}...</div>
                             </div>
                         </div>
                         
@@ -577,15 +586,10 @@
                                 ${statusText}
                             </div>
                             <div class="stat-badge blue">${formatTime(uptime)} uptime</div>
-                            <div class="stat-badge orange">${user.heartbeatCount || 1} heartbeats</div>
+                            <div class="stat-badge orange">${heartbeats} heartbeats</div>
                         </div>
                         
                         <div class="user-details">
-                            <div class="detail-row">
-                                <div class="detail-label">Session ID:</div>
-                                <div class="detail-value">${user.sessionId?.substring(0, 12) || 'N/A'}...</div>
-                            </div>
-                            
                             ${user.userInfo?.playerId ? `
                             <div class="detail-row">
                                 <div class="detail-label">Player ID:</div>
@@ -597,7 +601,7 @@
                             <div class="detail-row">
                                 <div class="detail-label">Profile:</div>
                                 <div class="detail-value">
-                                    <a href="${user.userInfo.profileUrl}" target="_blank" class="profile-link">
+                                    <a href="${user.userInfo.profileUrl}" target="_blank">
                                         View Profile
                                     </a>
                                 </div>
@@ -626,6 +630,11 @@
                             ` : ''}
                             
                             <div class="detail-row">
+                                <div class="detail-label">Session ID:</div>
+                                <div class="detail-value">${user.sessionId?.substring(0, 12) || 'N/A'}...</div>
+                            </div>
+                            
+                            <div class="detail-row">
                                 <div class="detail-label">Last Seen:</div>
                                 <div class="detail-value">${lastSeen}</div>
                             </div>
@@ -647,7 +656,8 @@
             if (currentUrl.includes('vercel.app')) {
                 apiUrlInput.value = currentUrl;
             }
-            loadData();
+            // Auto-load after 1 second
+            setTimeout(loadData, 1000);
         });
         
         // Stop auto-refresh when page is hidden
