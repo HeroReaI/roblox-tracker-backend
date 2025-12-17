@@ -31,7 +31,7 @@
             position: relative;
         }
 
-        /* Matrix Rain Background */
+        /* Enhanced Matrix Rain Background */
         #matrix-rain {
             position: fixed;
             top: 0;
@@ -39,7 +39,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.15;
+            opacity: 0.12;
         }
 
         .container {
@@ -50,33 +50,34 @@
             z-index: 1;
         }
 
-        /* Header with Glitch Effect */
+        /* Clean Header with Subtle Effects */
         .header {
             text-align: center;
             margin-bottom: 40px;
             padding: 30px;
-            background: rgba(0, 20, 0, 0.8);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 20, 0, 0.6);
+            border: 1px solid var(--matrix-green);
             border-radius: 15px;
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .header::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
-            animation: scanline 3s infinite;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
+            animation: scanline-subtle 4s infinite;
         }
 
-        @keyframes scanline {
-            0% { left: -100%; }
-            100% { left: 100%; }
+        @keyframes scanline-subtle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
 
         .header h1 {
@@ -87,59 +88,40 @@
             letter-spacing: 5px;
             margin-bottom: 10px;
             position: relative;
-            animation: glitch 2s infinite;
             color: var(--matrix-green);
             text-shadow: 
                 0 0 10px var(--matrix-glow),
-                0 0 20px var(--matrix-glow),
-                0 0 30px var(--matrix-glow);
+                0 0 20px var(--matrix-glow);
+            animation: subtle-glow 3s ease-in-out infinite alternate;
         }
 
-        @keyframes glitch {
-            0%, 100% { text-shadow: 0 0 10px var(--matrix-glow), 0 0 20px var(--matrix-glow), 0 0 30px var(--matrix-glow); }
-            25% { text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff, 0 0 10px var(--matrix-glow); }
-            50% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff, 0 0 20px var(--matrix-glow); }
-            75% { text-shadow: 0 0 10px var(--matrix-glow), 0 0 20px var(--matrix-glow), 0 0 30px var(--matrix-glow); }
+        @keyframes subtle-glow {
+            0% { text-shadow: 0 0 10px var(--matrix-glow), 0 0 20px var(--matrix-glow); }
+            100% { text-shadow: 0 0 15px var(--matrix-glow), 0 0 25px var(--matrix-glow), 0 0 35px var(--matrix-glow); }
         }
 
         .header p {
             font-size: 1.2rem;
             color: var(--matrix-cyan);
             text-shadow: 0 0 5px var(--matrix-cyan);
+            opacity: 0.9;
         }
 
-        /* Card with Holographic Effect */
+        /* Clean Card Design */
         .card {
-            background: rgba(0, 20, 0, 0.6);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 20, 0, 0.4);
+            border: 1px solid var(--matrix-green);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
             backdrop-filter: blur(15px);
-            box-shadow: 
-                0 0 30px rgba(0, 255, 65, 0.3),
-                inset 0 0 20px rgba(0, 255, 65, 0.1);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
         }
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(45deg, transparent 30%, rgba(0, 255, 65, 0.1) 50%, transparent 70%),
-                linear-gradient(-45deg, transparent 30%, rgba(0, 255, 255, 0.1) 50%, transparent 70%);
-            animation: hologram 4s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes hologram {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        .card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            border-color: var(--matrix-cyan);
         }
 
         .controls {
@@ -168,45 +150,37 @@
         input {
             width: 100%;
             padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--matrix-green);
             border-radius: 8px;
             font-size: 16px;
             color: var(--matrix-green);
             font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s;
-            position: relative;
+            transition: all 0.3s ease;
         }
 
         input:focus {
             outline: none;
             border-color: var(--matrix-cyan);
-            box-shadow: 
-                0 0 15px rgba(0, 255, 255, 0.5),
-                inset 0 0 10px rgba(0, 255, 255, 0.2);
-            animation: inputPulse 1.5s infinite;
-        }
-
-        @keyframes inputPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.3); }
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.8);
         }
 
         input::placeholder {
             color: var(--matrix-dark);
         }
 
-        /* Advanced Button with Ripple Effect */
+        /* Clean Professional Buttons */
         button {
             background: linear-gradient(135deg, var(--matrix-dark) 0%, var(--matrix-green) 100%);
             color: var(--matrix-black);
-            border: 2px solid var(--matrix-green);
+            border: 1px solid var(--matrix-green);
             padding: 12px 30px;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 2px;
             font-family: 'Orbitron', monospace;
@@ -217,27 +191,27 @@
         button::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
         }
 
-        button:active::before {
-            width: 300px;
-            height: 300px;
+        button:hover::before {
+            left: 100%;
         }
 
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 
-                0 10px 20px rgba(0, 255, 65, 0.4),
-                0 0 30px rgba(0, 255, 65, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 65, 0.3);
             border-color: var(--matrix-cyan);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0, 255, 65, 0.2);
         }
 
         button:disabled {
@@ -255,22 +229,22 @@
         }
 
         .quick-btn {
-            background: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.15);
             color: var(--matrix-green);
             border: 1px solid var(--matrix-green);
             padding: 8px 16px;
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-transform: uppercase;
             font-family: 'Orbitron', monospace;
         }
 
         .quick-btn:hover {
-            background: rgba(0, 255, 65, 0.4);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
-            transform: translateY(-2px);
+            background: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 255, 65, 0.2);
+            transform: translateY(-1px);
         }
 
         .global-btn {
@@ -278,7 +252,7 @@
             color: var(--matrix-black);
         }
 
-        /* Stats Grid with Advanced Animations */
+        /* Stats Grid with Professional Animations */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -292,46 +266,16 @@
             padding: 25px;
             border-radius: 10px;
             text-align: center;
-            border: 2px solid var(--matrix-green);
-            box-shadow: 
-                0 10px 20px rgba(0, 255, 65, 0.3),
-                inset 0 0 10px rgba(0, 255, 65, 0.3);
+            border: 1px solid var(--matrix-green);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
             position: relative;
             overflow: hidden;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 
-                0 15px 30px rgba(0, 255, 65, 0.5),
-                0 0 40px rgba(0, 255, 65, 0.7);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, var(--matrix-green), var(--matrix-cyan), var(--matrix-green));
-            border-radius: 10px;
-            z-index: -1;
-            animation: borderRotate 3s linear infinite;
-        }
-
-        @keyframes borderRotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, var(--matrix-cyan) 0%, var(--matrix-green) 100%);
-        }
-
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 65, 0.3);
         }
 
         .stat-value {
@@ -357,8 +301,8 @@
 
         /* Users List with Matrix Style */
         .users-list {
-            background: rgba(0, 20, 0, 0.5);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 20, 0, 0.3);
+            border: 1px solid var(--matrix-green);
             border-radius: 10px;
             padding: 20px;
             margin-top: 20px;
@@ -371,7 +315,7 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid var(--matrix-green);
+            border-bottom: 1px solid var(--matrix-green);
         }
 
         .users-header h3 {
@@ -388,7 +332,7 @@
             border-radius: 20px;
             font-weight: 700;
             border: 1px solid var(--matrix-cyan);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
         .user-cards {
@@ -398,36 +342,19 @@
         }
 
         .user-card {
-            background: rgba(0, 10, 0, 0.8);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 10, 0, 0.5);
+            border: 1px solid var(--matrix-green);
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
-            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0, 255, 65, 0.1);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .user-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .user-card:hover::before {
-            left: 100%;
-        }
-
         .user-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 
-                0 10px 25px rgba(0, 255, 65, 0.4),
-                0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 255, 65, 0.2);
             border-color: var(--matrix-cyan);
         }
 
@@ -449,8 +376,8 @@
             font-weight: 700;
             margin-right: 12px;
             font-size: 1.2rem;
-            border: 2px solid var(--matrix-cyan);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+            border: 1px solid var(--matrix-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
         .user-main {
@@ -479,7 +406,7 @@
         }
 
         .stat-badge {
-            background: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.15);
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.85rem;
@@ -488,19 +415,19 @@
         }
 
         .stat-badge.green {
-            background: rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.25);
             color: var(--matrix-green);
             border-color: var(--matrix-green);
         }
 
         .stat-badge.blue {
-            background: rgba(0, 255, 255, 0.3);
+            background: rgba(0, 255, 255, 0.25);
             color: var(--matrix-cyan);
             border-color: var(--matrix-cyan);
         }
 
         .stat-badge.orange {
-            background: rgba(255, 165, 0, 0.3);
+            background: rgba(255, 165, 0, 0.25);
             color: orange;
             border-color: orange;
         }
@@ -549,37 +476,18 @@
         }
 
         .script-card {
-            background: rgba(0, 10, 0, 0.8);
-            border: 2px solid var(--matrix-green);
+            background: rgba(0, 10, 0, 0.5);
+            border: 1px solid var(--matrix-green);
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
+            box-shadow: 0 3px 10px rgba(0, 255, 65, 0.1);
             text-align: center;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .script-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .script-card:hover::before {
-            left: 100%;
+            transition: all 0.3s ease;
         }
 
         .script-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 
-                0 10px 25px rgba(0, 255, 65, 0.4),
-                0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 255, 65, 0.2);
             border-color: var(--matrix-cyan);
         }
 
@@ -607,7 +515,18 @@
             margin-top: 5px;
         }
 
-        /* Loading Animations */
+        /* Enhanced Matrix Rain */
+        #matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.12;
+        }
+
+        /* Loading States */
         .loading {
             text-align: center;
             padding: 40px;
@@ -638,7 +557,7 @@
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
-            border: 2px solid #ff0040;
+            border: 1px solid #ff0040;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
         }
 
@@ -673,17 +592,6 @@
             font-size: 1.1rem;
             font-style: italic;
             text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
-
-        /* Matrix Rain Canvas */
-        #matrix-rain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.2;
         }
 
         /* Responsive */
@@ -771,7 +679,7 @@
     </div>
 
     <script>
-        // Matrix Rain Effect
+        // Enhanced Matrix Rain Effect
         const canvas = document.getElementById('matrix-rain');
         const ctx = canvas.getContext('2d');
 
@@ -781,16 +689,16 @@
         const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
         const matrixArray = matrix.split("");
 
-        const fontSize = 10;
+        const fontSize = 12;
         const columns = canvas.width / fontSize;
 
         const drops = [];
         for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
+            drops[x] = Math.random() * canvas.height / fontSize;
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = '#00ff41';
@@ -798,6 +706,14 @@
 
             for (let i = 0; i < drops.length; i++) {
                 const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                
+                // Add some variety to the rain
+                if (Math.random() > 0.95) {
+                    ctx.fillStyle = '#00ffff';
+                } else {
+                    ctx.fillStyle = '#00ff41';
+                }
+                
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
@@ -807,7 +723,7 @@
             }
         }
 
-        setInterval(drawMatrix, 35);
+        setInterval(drawMatrix, 50);
 
         // Resize canvas on window resize
         window.addEventListener('resize', () => {
