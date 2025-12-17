@@ -14,17 +14,17 @@ export default async function handler(req, res) {
     const { scriptId = 'default', detailed = 'false' } = req.query;
     const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50);
     const now = Date.now();
-
-    const onlineKey = `script:${sanitizedScriptId}:online`;
     const ttlSeconds = 90;
 
-    // 🔥 Prune inactive users
+    const onlineKey = `script:${sanitizedScriptId}:online`;
+
+    // Cleanup expired users
     await redis.zremrangebyscore(onlineKey, 0, now - ttlSeconds * 1000);
 
     const onlineCount = await redis.zcard(onlineKey);
     const includeDetails = detailed === 'true' || detailed === '1';
 
-    let users = [];
+    let detailedUsers = [];
 
     if (includeDetails && onlineCount > 0) {
       const entries = await redis.zrange(
@@ -44,25 +44,23 @@ export default async function handler(req, res) {
 
         try {
           const parsed = JSON.parse(raw);
-          const startTime = parsed.userInfo?.startTime || parsed.registeredAt;
-          const uptimeSeconds = Math.floor((now - startTime) / 1000);
 
-          users.push({
+          detailedUsers.push({
             userId,
-            playerName: parsed.userInfo.playerName,
-            playerId: parsed.userInfo.playerId,
-            profileUrl: parsed.userInfo.profileUrl,
-            executor: parsed.userInfo.executor,
-            jobId: parsed.userInfo.jobId,
-            placeId: parsed.userInfo.placeId,
-            heartbeatCount: parsed.heartbeatCount,
-            uptimeSeconds,
+            userInfo: {
+              sessionId: parsed.sessionId,
+              executor: parsed.userInfo?.executor,
+              playerName: parsed.userInfo?.playerName,
+              profileUrl: parsed.userInfo?.profileUrl,
+              jobId: parsed.userInfo?.jobId
+            },
+            heartbeatCount: parsed.heartbeatCount || 1,
             lastActive,
             secondsAgo,
             status: secondsAgo < 30 ? 'active' : 'idle'
           });
         } catch {
-          // skip corrupted user
+          // skip corrupted entries
         }
       }
     }
@@ -72,7 +70,7 @@ export default async function handler(req, res) {
       data: {
         scriptId: sanitizedScriptId,
         onlineCount,
-        users: includeDetails ? users : undefined,
+        detailedUsers,
         timestamp: now,
         ttlSeconds
       }
