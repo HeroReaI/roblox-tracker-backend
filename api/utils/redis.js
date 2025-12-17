@@ -34,21 +34,8 @@ export async function redisCommand(command, ...args) {
  */
 export const redis = {
   // String operations
-  setex: async (key, seconds, value) => {
-    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-    return await redisCommand('SETEX', key, seconds, stringValue);
-  },
-  
-  get: async (key) => {
-    const result = await redisCommand('GET', key);
-    if (!result) return null;
-    try {
-      return JSON.parse(result);
-    } catch {
-      return result;
-    }
-  },
-  
+  setex: (key, seconds, value) => redisCommand('SETEX', key, seconds, typeof value === 'object' ? JSON.stringify(value) : value),
+  get: (key) => redisCommand('GET', key),
   del: (key) => redisCommand('DEL', key),
   expire: (key, seconds) => redisCommand('EXPIRE', key, seconds),
   
@@ -56,37 +43,14 @@ export const redis = {
   zadd: (key, score, member) => redisCommand('ZADD', key, score, member),
   zrem: (key, member) => redisCommand('ZREM', key, member),
   zcard: (key) => redisCommand('ZCARD', key),
-  zrange: (key, start, stop, withScores = false) => 
-    redisCommand('ZRANGE', key, start, stop, ...(withScores ? ['WITHSCORES'] : [])),
+  zrange: (key, start, stop, withScores = false) => {
+    const args = [key, start, stop];
+    if (withScores) args.push('WITHSCORES');
+    return redisCommand('ZRANGE', ...args);
+  },
   zremrangebyscore: (key, min, max) => redisCommand('ZREMRANGEBYSCORE', key, min, max),
   
   // Key operations
   keys: (pattern) => redisCommand('KEYS', pattern),
-  ttl: (key) => redisCommand('TTL', key),
-  
-  // Pipeline multiple commands
-  pipeline: async (commands) => {
-    const results = [];
-    for (const [command, ...args] of commands) {
-      try {
-        const result = await redisCommand(command, ...args);
-        results.push({ success: true, result });
-      } catch (error) {
-        results.push({ success: false, error: error.message });
-      }
-    }
-    return results;
-  }
+  ttl: (key) => redisCommand('TTL', key)
 };
-
-/**
- * Test Redis connection
- */
-export async function testRedisConnection() {
-  try {
-    const pong = await redisCommand('PING');
-    return { success: true, message: pong };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
