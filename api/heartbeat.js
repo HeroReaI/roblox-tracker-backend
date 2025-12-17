@@ -23,9 +23,8 @@ export default async function handler(req, res) {
     const onlineKey = `script:${sanitizedScriptId}:online`;
 
     const now = Date.now();
-    const ttlSeconds = 90;
+    const ttlSeconds = 180; // INCREASED TO 180 SECONDS (3 MINUTES)
 
-    // Get user data
     const existing = await redis.get(userKey);
     if (!existing) {
       return res.status(404).json({
@@ -39,7 +38,6 @@ export default async function handler(req, res) {
     try {
       userData = JSON.parse(existing);
     } catch (e) {
-      // Corrupted data - clean up
       await redis.del(userKey);
       await redis.zrem(onlineKey, sanitizedUserId);
       return res.status(410).json({
@@ -49,24 +47,23 @@ export default async function handler(req, res) {
       });
     }
 
-    // Update heartbeat
+    // Update heartbeat info
     userData.lastHeartbeat = now;
     userData.heartbeatCount = (userData.heartbeatCount || 0) + 1;
     
-    // Ensure startTime exists (for backward compatibility)
+    // Ensure userInfo exists
     if (!userData.userInfo) userData.userInfo = {};
     if (!userData.userInfo.startTime) {
       userData.userInfo.startTime = userData.registeredAt || now;
     }
 
-    // Save with fresh TTL
+    // Save with fresh 180-second TTL
     await redis.setex(userKey, ttlSeconds, JSON.stringify(userData));
-    
-    // Update online sorted set
+    // Update sorted set with new timestamp
     await redis.zadd(onlineKey, now, sanitizedUserId);
 
-    // Prune inactive users (90 seconds)
-    await redis.zremrangebyscore(onlineKey, 0, now - (ttlSeconds * 1000));
+    // Clean up users inactive for 90 seconds
+    await redis.zremrangebyscore(onlineKey, 0, now - 90000);
 
     const onlineCount = await redis.zcard(onlineKey);
     const startTime = userData.userInfo.startTime;
