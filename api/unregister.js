@@ -54,17 +54,17 @@ export default async function handler(req, res) {
         userId: sanitizedUserId,
         scriptId: sanitizedScriptId,
         onlineCount,
-        timestamp: Date.now()
+        removed: true,
+        timestamp: Date.now(),
+        message: 'User immediately removed from online list'
       }
     });
 
   } catch (error) {
     console.error('Unregister error:', error);
-
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Internal server error'
     });
   }
 }
