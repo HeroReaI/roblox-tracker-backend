@@ -25,45 +25,68 @@ export default async function handler(req, res) {
     const now = Date.now();
     const ttlSeconds = 90;
 
-    const sessionId =
-      userInfo.sessionId ||
-      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    // Generate session ID
+    const sessionId = userInfo.sessionId ||
+      Math.random().toString(36).slice(2, 15) +
+      Math.random().toString(36).slice(2, 15);
 
+    // Store ALL session data in userInfo for consistency
     const userData = {
       userId: sanitizedUserId,
       scriptId: sanitizedScriptId,
-      sessionId,
+      sessionId: sessionId, // Keep at root for easy access
       registeredAt: now,
       lastHeartbeat: now,
       heartbeatCount: 1,
-
       userInfo: {
+        // Session info
+        sessionId: sessionId, // Also store in userInfo for consistency
+        
+        // Player info
         playerName: userInfo.playerName || "Unknown",
         playerId: userInfo.playerId || 0,
         profileUrl: userInfo.profileUrl || "",
+        
+        // Executor info
         executor: userInfo.executor || "Unknown",
-        placeId: userInfo.placeId,
+        executorVersion: userInfo.executorVersion || "",
+        
+        // Game info
+        placeId: userInfo.placeId || 0,
         jobId: userInfo.jobId || "Unknown",
+        gameName: userInfo.gameName || "Unknown Game",
+        
+        // Script info
         scriptName: userInfo.scriptName || sanitizedScriptId,
         scriptVersion: userInfo.scriptVersion || "1.0",
-        startTime: now
+        
+        // Timestamps
+        startTime: now,
+        timestamp: now
       }
     };
 
+    // Save user data with 90-second TTL
     await redis.setex(userKey, ttlSeconds, JSON.stringify(userData));
+    
+    // Add to online sorted set
     await redis.zadd(onlineKey, now, sanitizedUserId);
 
-    // 🔥 prune expired users
-    await redis.zremrangebyscore(onlineKey, 0, now - ttlSeconds * 1000);
+    // Clean up expired users
+    await redis.zremrangebyscore(onlineKey, 0, now - (ttlSeconds * 1000));
 
     const onlineCount = await redis.zcard(onlineKey);
 
     return res.json({
       success: true,
       data: {
-        sessionId,
+        userId: sanitizedUserId,
+        scriptId: sanitizedScriptId,
+        sessionId: sessionId,
         onlineCount,
-        ttlSeconds
+        nextHeartbeatIn: 30000,
+        timestamp: now,
+        ttlSeconds: ttlSeconds
       }
     });
 
