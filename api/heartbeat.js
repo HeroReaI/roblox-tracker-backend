@@ -1,113 +1,69 @@
 import { redis } from './utils/redis.js';
 
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false, 
-      error: 'Method not allowed. Use POST.' 
-    });
+    return res.status(405).json({ success: false, error: 'POST only' });
   }
 
   try {
     const { userId, scriptId } = req.body;
-
-    // Validate input
-    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Valid userId (non-empty string) is required'
-      });
+    if (!userId || !scriptId) {
+      return res.status(400).json({ success: false, error: 'Missing userId or scriptId' });
     }
 
-    if (!scriptId || typeof scriptId !== 'string' || scriptId.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Valid scriptId (non-empty string) is required'
-      });
-    }
+    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50);
+    const sanitizedUserId = userId.slice(0, 100);
 
-    const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
-    const sanitizedUserId = userId.substring(0, 100);
-    
-    const key = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
-    const onlineSetKey = `script:${sanitizedScriptId}:online`;
-    const timestamp = Date.now();
+    const userKey = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
+    const onlineKey = `script:${sanitizedScriptId}:online`;
 
-    // Check if user exists and get current data
-    const existingData = await redis.get(key);
+    const now = Date.now();
+    const ttlSeconds = 90;
 
-    if (!existingData) {
-      // User doesn't exist or expired (TTL reached)
+    const existing = await redis.get(userKey);
+    if (!existing) {
       return res.status(404).json({
         success: false,
-        error: 'User session not found or expired',
         code: 'SESSION_EXPIRED',
         action: 're-register'
       });
     }
 
-    // Parse and update user data
-    let userData;
-    try {
-      userData = JSON.parse(existingData);
-    } catch (parseError) {
-      // Corrupted data, delete and ask for re-registration
-      await redis.del(key);
-      await redis.zrem(onlineSetKey, sanitizedUserId);
-      
-      return res.status(410).json({
-        success: false,
-        error: 'Session data corrupted',
-        code: 'DATA_CORRUPTED',
-        action: 're-register'
-      });
-    }
+    let userData = JSON.parse(existing);
 
-    // Update heartbeat info
-    userData.lastHeartbeat = timestamp;
+    // Preserve start time
+    const startTime = userData.userInfo?.startTime || userData.registeredAt;
+
+    userData.lastHeartbeat = now;
     userData.heartbeatCount = (userData.heartbeatCount || 0) + 1;
-    userData.updatedAt = timestamp;
+    userData.userInfo.startTime = startTime;
 
-    // CRITICAL: Save with 90-second TTL (matches cleanup time)
-    await redis.setex(key, 90, JSON.stringify(userData));
-    
-    // Update sorted set with new timestamp (this is what keeps user "online")
-    await redis.zadd(onlineSetKey, timestamp, sanitizedUserId);
+    await redis.setex(userKey, ttlSeconds, JSON.stringify(userData));
+    await redis.zadd(onlineKey, now, sanitizedUserId);
 
-    // CRITICAL: Auto-remove users inactive for 90 seconds
-    const ninetySecondsAgo = timestamp - 90000;
-    await redis.zremrangebyscore(onlineSetKey, 0, ninetySecondsAgo);
+    // Prune inactive users
+    await redis.zremrangebyscore(onlineKey, 0, now - ttlSeconds * 1000);
 
-    // Get updated online count
-    const onlineCount = await redis.zcard(onlineSetKey);
+    const onlineCount = await redis.zcard(onlineKey);
+    const uptimeSeconds = Math.floor((now - startTime) / 1000);
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       data: {
-        userId: sanitizedUserId,
-        scriptId: sanitizedScriptId,
         onlineCount,
         heartbeatCount: userData.heartbeatCount,
-        nextHeartbeatIn: 30000, // 30 seconds
-        timestamp,
-        secondsSinceLastActive: 0 // Just updated
+        uptimeSeconds,
+        timestamp: now
       }
     });
 
-  } catch (error) {
-    console.error('Heartbeat error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
+  } catch (err) {
+    console.error('Heartbeat error:', err);
+    return res.status(500).json({ success: false, error: 'Server error' });
   }
 }
