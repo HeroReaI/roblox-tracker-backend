@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     const now = Date.now();
     const ttlSeconds = 90;
 
+    // Get user data
     const existing = await redis.get(userKey);
     if (!existing) {
       return res.status(404).json({
@@ -34,30 +35,52 @@ export default async function handler(req, res) {
       });
     }
 
-    let userData = JSON.parse(existing);
+    let userData;
+    try {
+      userData = JSON.parse(existing);
+    } catch (e) {
+      // Corrupted data - clean up
+      await redis.del(userKey);
+      await redis.zrem(onlineKey, sanitizedUserId);
+      return res.status(410).json({
+        success: false,
+        error: 'Session data corrupted',
+        action: 're-register'
+      });
+    }
 
-    // Preserve start time
-    const startTime = userData.userInfo?.startTime || userData.registeredAt;
-
+    // Update heartbeat
     userData.lastHeartbeat = now;
     userData.heartbeatCount = (userData.heartbeatCount || 0) + 1;
-    userData.userInfo.startTime = startTime;
+    
+    // Ensure startTime exists (for backward compatibility)
+    if (!userData.userInfo) userData.userInfo = {};
+    if (!userData.userInfo.startTime) {
+      userData.userInfo.startTime = userData.registeredAt || now;
+    }
 
+    // Save with fresh TTL
     await redis.setex(userKey, ttlSeconds, JSON.stringify(userData));
+    
+    // Update online sorted set
     await redis.zadd(onlineKey, now, sanitizedUserId);
 
-    // Prune inactive users
-    await redis.zremrangebyscore(onlineKey, 0, now - ttlSeconds * 1000);
+    // Prune inactive users (90 seconds)
+    await redis.zremrangebyscore(onlineKey, 0, now - (ttlSeconds * 1000));
 
     const onlineCount = await redis.zcard(onlineKey);
+    const startTime = userData.userInfo.startTime;
     const uptimeSeconds = Math.floor((now - startTime) / 1000);
 
     return res.json({
       success: true,
       data: {
+        userId: sanitizedUserId,
+        scriptId: sanitizedScriptId,
         onlineCount,
         heartbeatCount: userData.heartbeatCount,
         uptimeSeconds,
+        nextHeartbeatIn: 30000,
         timestamp: now
       }
     });
