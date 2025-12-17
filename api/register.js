@@ -49,16 +49,43 @@ export default async function handler(req, res) {
 
     // User data to store
     const userData = {
-      userId: sanitizedUserId,
-      scriptId: sanitizedScriptId,
-      userInfo: {
-        ...userInfo,
-        sessionId,
-        ip: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown'
-      },
-      lastHeartbeat: timestamp,
-      registeredAt: timestamp,
-      heartbeatCount: 1
+        userId: sanitizedUserId,
+        scriptId: sanitizedScriptId,
+        userInfo: {
+            // Basic info
+            sessionId: sessionId,
+            executor: userInfo.executor || "Unknown",
+            executorVersion: userInfo.executorVersion,
+            
+            // Roblox Game Info
+            placeId: userInfo.placeId,
+            jobId: userInfo.jobId || "Unknown", // NEW: Game Server JobId
+            gameName: userInfo.gameName || "Unknown Game",
+            
+            // Player Info (NEW)
+            playerName: userInfo.playerName || "Unknown",
+            playerId: userInfo.playerId || 0,
+            profileUrl: userInfo.profileUrl || "",
+            accountAge: userInfo.accountAge || 0,
+            
+            // Script Usage (NEW)
+            scriptName: userInfo.scriptName || SCRIPT_ID,
+            scriptVersion: userInfo.scriptVersion || "1.0",
+            startTime: timestamp,
+            
+            // Technical Info
+            robloxVersion: userInfo.robloxVersion || version(),
+            timestamp: timestamp,
+            ip: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown'
+        },
+        lastHeartbeat: timestamp,
+        registeredAt: timestamp,
+        heartbeatCount: 1,
+        
+        // Statistics (NEW)
+        totalUptime: 0, // Will increase with each heartbeat
+        averagePing: userInfo.ping || 0,
+        lastLocation: userInfo.location || "Unknown"
     };
 
     // CRITICAL: Store with 90-second TTL
