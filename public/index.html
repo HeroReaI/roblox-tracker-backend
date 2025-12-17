@@ -106,6 +106,33 @@
             cursor: not-allowed;
         }
         
+        .quick-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        
+        .quick-btn {
+            background: #e8f4ff;
+            color: #3498db;
+            border: 1px solid #3498db;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .quick-btn:hover {
+            background: #d4e7ff;
+        }
+        
+        .global-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            margin-top: 5px;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -128,6 +155,10 @@
         
         .stat-card:nth-child(3) {
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #fd746c 0%, #ff9068 100%);
         }
         
         .stat-value {
@@ -290,6 +321,49 @@
             text-decoration: underline;
         }
         
+        .script-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .script-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #27ae60;
+            text-align: center;
+        }
+        
+        .script-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .script-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        
+        .script-count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #27ae60;
+            margin: 10px 0;
+        }
+        
+        .script-users {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
@@ -368,6 +442,10 @@
             .user-cards {
                 grid-template-columns: 1fr;
             }
+            
+            .script-list {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -383,12 +461,18 @@
                 <div class="input-group">
                     <label for="scriptId">Script ID</label>
                     <input type="text" id="scriptId" placeholder="Enter script ID" value="bigratmonster">
+                    <div class="quick-buttons">
+                        <button class="quick-btn" data-script="bigratmonster">bigratmonster</button>
+                        <button class="quick-btn" data-script="test">test</button>
+                        <button class="quick-btn" data-script="default">default</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="apiUrl">API URL</label>
                     <input type="text" id="apiUrl" placeholder="API Base URL" value="https://roblox-tracker-backend.vercel.app">
                 </div>
                 <button id="loadBtn">Load Data</button>
+                <button id="globalBtn" class="global-btn">🌍 View All Scripts</button>
             </div>
             
             <div class="stats-grid" id="statsGrid">
@@ -410,11 +494,13 @@
         const loadBtn = document.getElementById('loadBtn');
         const scriptIdInput = document.getElementById('scriptId');
         const apiUrlInput = document.getElementById('apiUrl');
+        const globalBtn = document.getElementById('globalBtn');
         const statsGrid = document.getElementById('statsGrid');
         const usersList = document.getElementById('usersList');
         
         let autoRefreshInterval = null;
         let isLoading = false;
+        let currentView = 'script'; // 'script' or 'global'
         
         // Format time (seconds to MM:SS or Xm Ys)
         function formatTime(seconds) {
@@ -441,13 +527,15 @@
             return date.toLocaleTimeString();
         }
         
-        // Load data from API
-        async function loadData() {
+        // Load script-specific data
+        async function loadScriptData() {
             if (isLoading) return;
             
+            currentView = 'script';
             isLoading = true;
             loadBtn.disabled = true;
             loadBtn.textContent = 'Loading...';
+            globalBtn.textContent = '🌍 View All Scripts';
             
             const scriptId = scriptIdInput.value.trim() || 'default';
             const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
@@ -470,7 +558,7 @@
                 
                 // Auto-refresh every 10 seconds
                 if (!autoRefreshInterval) {
-                    autoRefreshInterval = setInterval(loadData, 10000);
+                    autoRefreshInterval = setInterval(loadScriptData, 10000);
                 }
                 
             } catch (error) {
@@ -506,6 +594,104 @@
             }
         }
         
+        // Load global data (all scripts)
+        async function loadGlobalData() {
+            if (isLoading) return;
+            
+            currentView = 'global';
+            isLoading = true;
+            globalBtn.disabled = true;
+            globalBtn.textContent = 'Loading...';
+            loadBtn.textContent = '📁 View Script';
+            
+            const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
+            
+            try {
+                // First, try the new /all-status endpoint
+                const response = await fetch(`${apiUrl}/api/all-status`);
+                
+                if (response.status === 404) {
+                    // If /all-status doesn't exist, show instructions
+                    usersList.innerHTML = `
+                        <div class="users-header">
+                            <h3>🌍 Global View (All Scripts)</h3>
+                        </div>
+                        <div class="error">
+                            <strong>Global view not available yet</strong><br><br>
+                            To see all scripts at once, you need to:<br>
+                            1. Create <code>/api/all-status.js</code> file<br>
+                            2. Deploy to Vercel<br><br>
+                            Currently showing: <strong>${scriptIdInput.value || 'default'}</strong> script only
+                        </div>
+                    `;
+                    
+                    // Show current script stats
+                    await loadScriptData();
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'API returned failure');
+                }
+                
+                // Update stats for global view
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value">${result.data.totalUsers || 0}</div>
+                        <div class="stat-label">Across All Scripts</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">Active Scripts</div>
+                        <div class="stat-value">${result.data.scripts?.length || 0}</div>
+                        <div class="stat-label">With Users Online</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-label">Most Popular</div>
+                        <div class="stat-value" style="font-size: 1.8rem;">
+                            ${result.data.scripts?.length > 0 ? result.data.scripts[0].scriptId : 'None'}
+                        </div>
+                        <div class="stat-label">Script ID</div>
+                    </div>
+                `;
+                
+                // Show scripts list
+                updateScriptsList(result.data);
+                
+                // Stop auto-refresh for global view
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                
+            } catch (error) {
+                console.error('Failed to load global data:', error);
+                
+                usersList.innerHTML = `
+                    <div class="error">
+                        <strong>Error Loading Global Data:</strong><br>
+                        ${error.message}<br><br>
+                        Showing script view instead...
+                    </div>
+                `;
+                
+                // Fall back to script view
+                await loadScriptData();
+            } finally {
+                isLoading = false;
+                globalBtn.disabled = false;
+                globalBtn.textContent = '🌍 View All Scripts';
+            }
+        }
+        
         // Update statistics section
         function updateStats(data) {
             const lastUpdate = formatDate(data.timestamp);
@@ -516,7 +702,7 @@
                 <div class="stat-card">
                     <div class="stat-label">Total Online</div>
                     <div class="stat-value">${data.onlineCount || 0}</div>
-                    <div class="stat-label">All Users</div>
+                    <div class="stat-label">This Script</div>
                 </div>
                 
                 <div class="stat-card">
@@ -526,7 +712,7 @@
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-label">Script</div>
+                    <div class="stat-label">Script ID</div>
                     <div class="stat-value" style="font-size: 1.8rem;">${data.scriptId || 'default'}</div>
                     <div class="stat-label">Updated: ${lastUpdate}</div>
                 </div>
@@ -538,7 +724,7 @@
             if (!data.detailedUsers || data.detailedUsers.length === 0) {
                 usersList.innerHTML = `
                     <div class="users-header">
-                        <h3>Online Users</h3>
+                        <h3>📋 Script: ${data.scriptId || 'default'}</h3>
                         <span class="user-count">0 users</span>
                     </div>
                     <div class="no-users">
@@ -554,7 +740,7 @@
             
             let usersHTML = `
                 <div class="users-header">
-                    <h3>Online Users</h3>
+                    <h3>📋 Script: ${data.scriptId || 'default'}</h3>
                     <span class="user-count">${sortedUsers.length} users</span>
                 </div>
                 <div class="user-cards">
@@ -647,8 +833,67 @@
             usersList.innerHTML = usersHTML;
         }
         
+        // Update scripts list for global view
+        function updateScriptsList(data) {
+            if (!data.scripts || data.scripts.length === 0) {
+                usersList.innerHTML = `
+                    <div class="users-header">
+                        <h3>🌍 Global View (All Scripts)</h3>
+                    </div>
+                    <div class="no-users">
+                        No scripts currently have users online<br>
+                        <small>Scripts will appear here when users start using them</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by user count (highest first)
+            const sortedScripts = [...data.scripts].sort((a, b) => b.onlineCount - a.onlineCount);
+            
+            let scriptsHTML = `
+                <div class="users-header">
+                    <h3>🌍 Global View (All Scripts)</h3>
+                    <span class="user-count">${data.totalUsers} total users</span>
+                </div>
+                <div class="script-list">
+            `;
+            
+            sortedScripts.forEach(script => {
+                scriptsHTML += `
+                    <div class="script-card">
+                        <div class="script-name">${script.scriptId}</div>
+                        <div class="script-count">${script.onlineCount}</div>
+                        <div class="script-users">user${script.onlineCount !== 1 ? 's' : ''} online</div>
+                        <button onclick="switchToScript('${script.scriptId}')" 
+                                style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            View Users
+                        </button>
+                    </div>
+                `;
+            });
+            
+            scriptsHTML += `</div>`;
+            usersList.innerHTML = scriptsHTML;
+        }
+        
+        // Switch to a specific script
+        window.switchToScript = function(scriptId) {
+            scriptIdInput.value = scriptId;
+            loadScriptData();
+        };
+        
         // Event Listeners
-        loadBtn.addEventListener('click', loadData);
+        loadBtn.addEventListener('click', loadScriptData);
+        globalBtn.addEventListener('click', loadGlobalData);
+        
+        // Quick script buttons
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                scriptIdInput.value = this.dataset.script;
+                loadScriptData();
+            });
+        });
         
         // Auto-load on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -657,7 +902,7 @@
                 apiUrlInput.value = currentUrl;
             }
             // Auto-load after 1 second
-            setTimeout(loadData, 1000);
+            setTimeout(loadScriptData, 1000);
         });
         
         // Stop auto-refresh when page is hidden
@@ -665,18 +910,18 @@
             if (document.hidden && autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
                 autoRefreshInterval = null;
-            } else if (!document.hidden && !autoRefreshInterval) {
-                loadData();
+            } else if (!document.hidden && !autoRefreshInterval && currentView === 'script') {
+                loadScriptData();
             }
         });
         
         // Allow Enter key in input fields
         scriptIdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loadData();
+            if (e.key === 'Enter') loadScriptData();
         });
         
         apiUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loadData();
+            if (e.key === 'Enter') loadScriptData();
         });
     </script>
 </body>
