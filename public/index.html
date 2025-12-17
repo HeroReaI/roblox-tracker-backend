@@ -3,196 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 HellScript Tracker - Devil's Dashboard</title>
+    <title>Stratos Hub Dashboard</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --matrix-green: #00ff41;
+            --matrix-dark: #003b00;
+            --matrix-black: #000d00;
+            --matrix-glow: #00ff41;
+            --matrix-cyan: #00ffff;
+            --matrix-bg: #000500;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', monospace;
         }
-        
+
         body {
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(139, 0, 0, 0.2) 0%, transparent 50%),
-                #0a0a0a;
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--matrix-black);
+            color: var(--matrix-green);
             min-height: 100vh;
-            padding: 20px;
-            color: #ff0040;
             overflow-x: hidden;
+            position: relative;
         }
-        
-        /* Animated background particles */
-        body::before {
-            content: '';
+
+        /* Matrix Rain Background */
+        #matrix-rain {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #ff0040, transparent),
-                radial-gradient(2px 2px at 40px 70px, #ff1493, transparent),
-                radial-gradient(1px 1px at 90px 40px, #8b0000, transparent),
-                radial-gradient(1px 1px at 130px 80px, #ff0040, transparent);
-            background-repeat: repeat;
-            background-size: 150px 150px;
-            animation: drift 20s linear infinite;
             z-index: -1;
-            opacity: 0.5;
+            opacity: 0.15;
         }
-        
-        @keyframes drift {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(150px, 150px); }
-        }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
             position: relative;
             z-index: 1;
         }
-        
+
+        /* Header with Glitch Effect */
         .header {
             text-align: center;
             margin-bottom: 40px;
             padding: 30px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.3) 0%, rgba(255, 0, 64, 0.2) 100%);
-            border: 2px solid #ff0040;
+            background: rgba(0, 20, 0, 0.8);
+            border: 2px solid var(--matrix-green);
             border-radius: 15px;
-            box-shadow: 
-                0 0 50px rgba(255, 0, 64, 0.5),
-                inset 0 0 20px rgba(255, 0, 64, 0.1);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
-        
+
         .header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent 30%,
-                rgba(255, 0, 64, 0.1) 50%,
-                transparent 70%
-            );
-            animation: shine 3s infinite;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            animation: scanline 3s infinite;
         }
-        
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+
+        @keyframes scanline {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
-        
+
         .header h1 {
-            font-size: 3rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 5px;
             margin-bottom: 10px;
-            text-shadow: 
-                0 0 10px #ff0040,
-                0 0 20px #ff0040,
-                0 0 30px #ff0040;
-            animation: flicker 2s infinite alternate;
             position: relative;
-            z-index: 1;
+            animation: glitch 2s infinite;
+            color: var(--matrix-green);
+            text-shadow: 
+                0 0 10px var(--matrix-glow),
+                0 0 20px var(--matrix-glow),
+                0 0 30px var(--matrix-glow);
         }
-        
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+
+        @keyframes glitch {
+            0%, 100% { text-shadow: 0 0 10px var(--matrix-glow), 0 0 20px var(--matrix-glow), 0 0 30px var(--matrix-glow); }
+            25% { text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff, 0 0 10px var(--matrix-glow); }
+            50% { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff, 0 0 20px var(--matrix-glow); }
+            75% { text-shadow: 0 0 10px var(--matrix-glow), 0 0 20px var(--matrix-glow), 0 0 30px var(--matrix-glow); }
         }
-        
+
         .header p {
             font-size: 1.2rem;
-            color: #ff69b4;
-            text-shadow: 0 0 5px #ff69b4;
-            position: relative;
-            z-index: 1;
+            color: var(--matrix-cyan);
+            text-shadow: 0 0 5px var(--matrix-cyan);
         }
-        
+
+        /* Card with Holographic Effect */
         .card {
-            background: rgba(10, 10, 10, 0.9);
-            border: 2px solid #ff0040;
+            background: rgba(0, 20, 0, 0.6);
+            border: 2px solid var(--matrix-green);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
+            backdrop-filter: blur(15px);
             box-shadow: 
-                0 0 30px rgba(255, 0, 64, 0.5),
-                inset 0 0 20px rgba(255, 0, 64, 0.1);
-            backdrop-filter: blur(10px);
+                0 0 30px rgba(0, 255, 65, 0.3),
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(0, 255, 65, 0.1) 50%, transparent 70%),
+                linear-gradient(-45deg, transparent 30%, rgba(0, 255, 255, 0.1) 50%, transparent 70%);
+            animation: hologram 4s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes hologram {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
         .controls {
             display: flex;
             gap: 20px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
-        
+
         .input-group {
             flex: 1;
             min-width: 200px;
             position: relative;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
-            color: #ff69b4;
+            color: var(--matrix-cyan);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             font-size: 0.9rem;
         }
-        
+
         input {
             width: 100%;
             padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #ff0040;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--matrix-green);
             border-radius: 8px;
             font-size: 16px;
-            color: #ff69b4;
+            color: var(--matrix-green);
+            font-family: 'Share Tech Mono', monospace;
             transition: all 0.3s;
-            font-family: 'Courier New', monospace;
+            position: relative;
         }
-        
+
         input:focus {
             outline: none;
-            border-color: #ff1493;
+            border-color: var(--matrix-cyan);
             box-shadow: 
-                0 0 10px rgba(255, 20, 147, 0.5),
-                inset 0 0 5px rgba(255, 20, 147, 0.2);
-            background: rgba(0, 0, 0, 0.9);
+                0 0 15px rgba(0, 255, 255, 0.5),
+                inset 0 0 10px rgba(0, 255, 255, 0.2);
+            animation: inputPulse 1.5s infinite;
         }
-        
+
+        @keyframes inputPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.3); }
+        }
+
         input::placeholder {
-            color: #8b0000;
+            color: var(--matrix-dark);
         }
-        
+
+        /* Advanced Button with Ripple Effect */
         button {
-            background: linear-gradient(135deg, #8b0000 0%, #ff0040 100%);
-            color: white;
-            border: 2px solid #ff0040;
+            background: linear-gradient(135deg, var(--matrix-dark) 0%, var(--matrix-green) 100%);
+            color: var(--matrix-black);
+            border: 2px solid var(--matrix-green);
             padding: 12px 30px;
             border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-family: 'Orbitron', monospace;
             position: relative;
             overflow: hidden;
-            font-family: 'Courier New', monospace;
         }
-        
+
         button::before {
             content: '';
             position: absolute;
@@ -200,84 +221,93 @@
             left: 50%;
             width: 0;
             height: 0;
-            background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
         }
-        
-        button:hover::before {
+
+        button:active::before {
             width: 300px;
             height: 300px;
         }
-        
+
         button:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             box-shadow: 
-                0 10px 20px rgba(255, 0, 64, 0.4),
-                0 0 20px rgba(255, 0, 64, 0.6);
-            border-color: #ff69b4;
+                0 10px 20px rgba(0, 255, 65, 0.4),
+                0 0 30px rgba(0, 255, 65, 0.6);
+            border-color: var(--matrix-cyan);
         }
-        
+
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             background: #333;
             border-color: #555;
         }
-        
+
         .quick-buttons {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin-top: 10px;
         }
-        
+
         .quick-btn {
-            background: rgba(139, 0, 0, 0.3);
-            color: #ff69b4;
-            border: 1px solid #ff0040;
+            background: rgba(0, 255, 65, 0.2);
+            color: var(--matrix-green);
+            border: 1px solid var(--matrix-green);
             padding: 8px 16px;
             border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
-            font-family: 'Courier New', monospace;
+            font-family: 'Orbitron', monospace;
         }
-        
+
         .quick-btn:hover {
-            background: rgba(255, 0, 64, 0.3);
-            box-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
-            transform: translateY(-1px);
+            background: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+            transform: translateY(-2px);
         }
-        
+
         .global-btn {
-            background: linear-gradient(135deg, #ff0040 0%, #ff1493 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--matrix-cyan) 0%, var(--matrix-green) 100%);
+            color: var(--matrix-black);
         }
-        
+
+        /* Stats Grid with Advanced Animations */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .stat-card {
-            background: linear-gradient(135deg, #8b0000 0%, #ff0040 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--matrix-dark) 0%, var(--matrix-green) 100%);
+            color: var(--matrix-black);
             padding: 25px;
             border-radius: 10px;
             text-align: center;
-            border: 2px solid #ff69b4;
+            border: 2px solid var(--matrix-green);
             box-shadow: 
-                0 10px 20px rgba(255, 0, 64, 0.3),
-                inset 0 0 10px rgba(255, 105, 180, 0.3);
+                0 10px 20px rgba(0, 255, 65, 0.3),
+                inset 0 0 10px rgba(0, 255, 65, 0.3);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s;
         }
-        
+
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 
+                0 15px 30px rgba(0, 255, 65, 0.5),
+                0 0 40px rgba(0, 255, 65, 0.7);
+        }
+
         .stat-card::before {
             content: '';
             position: absolute;
@@ -285,102 +315,99 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(45deg, #ff0040, #ff1493, #8b0000, #ff0040);
+            background: linear-gradient(45deg, var(--matrix-green), var(--matrix-cyan), var(--matrix-green));
             border-radius: 10px;
             z-index: -1;
-            animation: borderGlow 3s linear infinite;
+            animation: borderRotate 3s linear infinite;
         }
-        
-        @keyframes borderGlow {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
+
+        @keyframes borderRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
+
         .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #ff0040 0%, #ff1493 100%);
+            background: linear-gradient(135deg, var(--matrix-cyan) 0%, var(--matrix-green) 100%);
         }
-        
+
         .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #ff1493 0%, #8b0000 100%);
+            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
         }
-        
-        .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #8b0000 0%, #4b0000 100%);
-        }
-        
+
         .stat-value {
+            font-family: 'Orbitron', monospace;
             font-size: 3rem;
-            font-weight: 700;
+            font-weight: 900;
             margin: 10px 0;
-            text-shadow: 
-                0 0 10px rgba(255, 255, 255, 0.5),
-                0 0 20px rgba(255, 0, 64, 0.8);
-            animation: pulseGlow 2s infinite alternate;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: countUp 1s ease-out;
         }
-        
-        @keyframes pulseGlow {
-            0% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 0, 64, 0.8); }
-            100% { text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 0, 64, 1); }
+
+        @keyframes countUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
-        
+
         .stat-label {
             font-size: 1.1rem;
             opacity: 0.9;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        
+
+        /* Users List with Matrix Style */
         .users-list {
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #ff0040;
+            background: rgba(0, 20, 0, 0.5);
+            border: 2px solid var(--matrix-green);
             border-radius: 10px;
             padding: 20px;
             margin-top: 20px;
-            box-shadow: inset 0 0 20px rgba(255, 0, 64, 0.2);
+            backdrop-filter: blur(10px);
         }
-        
+
         .users-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #ff0040;
+            border-bottom: 2px solid var(--matrix-green);
         }
-        
+
         .users-header h3 {
-            color: #ff69b4;
-            text-shadow: 0 0 5px #ff69b4;
+            color: var(--matrix-cyan);
+            text-shadow: 0 0 5px var(--matrix-cyan);
+            font-family: 'Orbitron', monospace;
             font-size: 1.5rem;
         }
-        
+
         .user-count {
-            background: linear-gradient(135deg, #ff0040 0%, #ff1493 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
+            color: var(--matrix-black);
             padding: 5px 15px;
             border-radius: 20px;
-            font-weight: 600;
-            border: 1px solid #ff69b4;
-            box-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
+            font-weight: 700;
+            border: 1px solid var(--matrix-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
-        
+
         .user-cards {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 15px;
         }
-        
+
         .user-card {
-            background: rgba(20, 20, 20, 0.9);
-            border: 2px solid #ff0040;
+            background: rgba(0, 10, 0, 0.8);
+            border: 2px solid var(--matrix-green);
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 5px 15px rgba(255, 0, 64, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
         }
-        
+
         .user-card::before {
             content: '';
             position: absolute;
@@ -388,150 +415,151 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 0, 64, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
             transition: left 0.5s;
         }
-        
+
         .user-card:hover::before {
             left: 100%;
         }
-        
+
         .user-card:hover {
             transform: translateY(-5px);
             box-shadow: 
-                0 10px 25px rgba(255, 0, 64, 0.5),
-                0 0 20px rgba(255, 0, 64, 0.3);
-            border-color: #ff69b4;
+                0 10px 25px rgba(0, 255, 65, 0.4),
+                0 0 20px rgba(0, 255, 65, 0.3);
+            border-color: var(--matrix-cyan);
         }
-        
+
         .user-header {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
         }
-        
+
         .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ff0040 0%, #8b0000 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
+            color: var(--matrix-black);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 700;
             margin-right: 12px;
             font-size: 1.2rem;
-            border: 2px solid #ff69b4;
-            box-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
+            border: 2px solid var(--matrix-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
-        
+
         .user-main {
             flex: 1;
         }
-        
+
         .user-name {
-            font-weight: 600;
-            color: #ff69b4;
+            font-weight: 700;
+            color: var(--matrix-cyan);
             font-size: 1.1rem;
-            text-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
-        
+
         .user-id {
             font-size: 0.85rem;
-            color: #ff0040;
+            color: var(--matrix-green);
             word-break: break-all;
             margin-top: 2px;
         }
-        
+
         .user-stats {
             display: flex;
             gap: 15px;
             margin: 10px 0;
             flex-wrap: wrap;
         }
-        
+
         .stat-badge {
-            background: rgba(139, 0, 0, 0.3);
+            background: rgba(0, 255, 65, 0.2);
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.85rem;
-            color: #ff69b4;
-            border: 1px solid #ff0040;
+            color: var(--matrix-green);
+            border: 1px solid var(--matrix-green);
         }
-        
+
         .stat-badge.green {
-            background: rgba(255, 0, 64, 0.2);
-            color: #ff69b4;
-            border-color: #ff69b4;
+            background: rgba(0, 255, 65, 0.3);
+            color: var(--matrix-green);
+            border-color: var(--matrix-green);
         }
-        
+
         .stat-badge.blue {
-            background: rgba(255, 20, 147, 0.2);
-            color: #ff1493;
-            border-color: #ff1493;
+            background: rgba(0, 255, 255, 0.3);
+            color: var(--matrix-cyan);
+            border-color: var(--matrix-cyan);
         }
-        
+
         .stat-badge.orange {
-            background: rgba(255, 140, 0, 0.2);
-            color: #ff8c00;
-            border-color: #ff8c00;
+            background: rgba(255, 165, 0, 0.3);
+            color: orange;
+            border-color: orange;
         }
-        
+
         .user-details {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #ff0040;
+            border-top: 1px solid var(--matrix-green);
         }
-        
+
         .detail-row {
             display: flex;
             margin-bottom: 6px;
             font-size: 0.9rem;
         }
-        
+
         .detail-label {
             flex: 0 0 120px;
-            color: #ff69b4;
-            font-weight: 500;
+            color: var(--matrix-cyan);
+            font-weight: 600;
         }
-        
+
         .detail-value {
             flex: 1;
-            color: #ff0040;
+            color: var(--matrix-green);
             word-break: break-word;
         }
-        
+
         .detail-value a {
-            color: #ff1493;
+            color: var(--matrix-cyan);
             text-decoration: none;
-            text-shadow: 0 0 5px rgba(255, 20, 147, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
-        
+
         .detail-value a:hover {
             text-decoration: underline;
-            color: #ff69b4;
+            color: var(--matrix-green);
         }
-        
+
+        /* Script List */
         .script-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .script-card {
-            background: rgba(20, 20, 20, 0.9);
-            border: 2px solid #ff0040;
+            background: rgba(0, 10, 0, 0.8);
+            border: 2px solid var(--matrix-green);
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 5px 15px rgba(255, 0, 64, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
             text-align: center;
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
         }
-        
+
         .script-card::before {
             content: '';
             position: absolute;
@@ -539,79 +567,81 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 0, 64, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
             transition: left 0.5s;
         }
-        
+
         .script-card:hover::before {
             left: 100%;
         }
-        
+
         .script-card:hover {
             transform: translateY(-5px);
             box-shadow: 
-                0 10px 25px rgba(255, 0, 64, 0.5),
-                0 0 20px rgba(255, 0, 64, 0.3);
-            border-color: #ff69b4;
+                0 10px 25px rgba(0, 255, 65, 0.4),
+                0 0 20px rgba(0, 255, 65, 0.3);
+            border-color: var(--matrix-cyan);
         }
-        
+
         .script-name {
-            font-weight: 600;
-            color: #ff69b4;
+            font-weight: 700;
+            color: var(--matrix-cyan);
             font-size: 1.2rem;
             margin-bottom: 5px;
             word-break: break-all;
-            text-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
-        
+
         .script-count {
+            font-family: 'Orbitron', monospace;
             font-size: 2rem;
-            font-weight: 700;
-            color: #ff0040;
+            font-weight: 900;
+            color: var(--matrix-green);
             margin: 10px 0;
-            text-shadow: 0 0 10px rgba(255, 0, 64, 0.8);
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
         }
-        
+
         .script-users {
             font-size: 0.9rem;
-            color: #ff69b4;
+            color: var(--matrix-cyan);
             margin-top: 5px;
         }
-        
+
+        /* Loading Animations */
         .loading {
             text-align: center;
             padding: 40px;
-            color: #ff69b4;
+            color: var(--matrix-green);
             font-size: 1.1rem;
-            text-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
         }
-        
+
         .loading-spinner {
-            border: 3px solid rgba(139, 0, 0, 0.3);
-            border-top: 3px solid #ff0040;
+            border: 3px solid rgba(0, 255, 65, 0.3);
+            border-top: 3px solid var(--matrix-green);
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
-            box-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         .error {
-            background: rgba(139, 0, 0, 0.2);
+            background: rgba(255, 0, 0, 0.1);
             color: #ff0040;
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
             border: 2px solid #ff0040;
-            box-shadow: 0 0 15px rgba(255, 0, 64, 0.3);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
         }
-        
+
         .status-indicator {
             display: inline-block;
             width: 10px;
@@ -620,51 +650,43 @@
             margin-right: 8px;
             box-shadow: 0 0 5px currentColor;
         }
-        
+
         .status-online {
-            background: #ff0040;
+            background: var(--matrix-green);
             animation: pulse 2s infinite;
         }
-        
+
         .status-idle {
-            background: #ff8c00;
+            background: var(--matrix-cyan);
         }
-        
+
         @keyframes pulse {
             0% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.1); }
             100% { opacity: 1; transform: scale(1); }
         }
-        
+
         .no-users {
             text-align: center;
             padding: 40px;
-            color: #ff69b4;
+            color: var(--matrix-cyan);
             font-size: 1.1rem;
             font-style: italic;
-            text-shadow: 0 0 5px rgba(255, 105, 180, 0.5);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
         }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 10px;
+
+        /* Matrix Rain Canvas */
+        #matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.2;
         }
-        
-        ::-webkit-scrollbar-track {
-            background: #0a0a0a;
-            border: 1px solid #ff0040;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #ff0040 0%, #ff1493 100%);
-            border-radius: 5px;
-            border: 1px solid #8b0000;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #ff1493 0%, #ff0040 100%);
-        }
-        
+
+        /* Responsive */
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -687,16 +709,34 @@
             }
             
             .header h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--matrix-black);
+            border: 1px solid var(--matrix-green);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
+            border-radius: 5px;
+            border: 1px solid var(--matrix-dark);
         }
     </style>
 </head>
 <body>
+    <canvas id="matrix-rain"></canvas>
+    
     <div class="container">
         <div class="header">
-            <h1>🔥 HELLSCRIPT TRACKER</h1>
-            <p>Devil's Dashboard - Monitoring the Damned</p>
+            <h1>STRATOS HUB</h1>
+            <p>Real-time System Monitoring Interface</p>
         </div>
         
         <div class="card">
@@ -714,23 +754,67 @@
                     <label for="apiUrl">API URL</label>
                     <input type="text" id="apiUrl" placeholder="API Base URL" value="https://roblox-tracker-backend.vercel.app">
                 </div>
-                <button id="loadBtn">🔥 SUMMON DATA</button>
-                <button id="globalBtn" class="global-btn">💀 UNDERWORLD VIEW</button>
+                <button id="loadBtn">INITIALIZE SYSTEM</button>
+                <button id="globalBtn" class="global-btn">GLOBAL MATRIX</button>
             </div>
             
             <div class="stats-grid" id="statsGrid">
                 <div class="loading-spinner"></div>
-                <div>Loading damned souls...</div>
+                <div>Initializing system protocols...</div>
             </div>
             
             <div class="users-list" id="usersList">
                 <div class="loading-spinner"></div>
-                <div class="loading">Summoning user data from the abyss...</div>
+                <div class="loading">Scanning user matrix...</div>
             </div>
         </div>
     </div>
 
     <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-rain');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+        const matrixArray = matrix.split("");
+
+        const fontSize = 10;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px Share Tech Mono';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
         // DOM Elements
         const loadBtn = document.getElementById('loadBtn');
         const scriptIdInput = document.getElementById('scriptId');
@@ -775,8 +859,8 @@
             currentView = 'script';
             isLoading = true;
             loadBtn.disabled = true;
-            loadBtn.textContent = 'SUMMONING...';
-            globalBtn.textContent = '💀 UNDERWORLD VIEW';
+            loadBtn.textContent = 'SCANNING...';
+            globalBtn.textContent = 'GLOBAL MATRIX';
             
             const scriptId = scriptIdInput.value.trim() || 'default';
             const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
@@ -807,19 +891,19 @@
                 
                 statsGrid.innerHTML = `
                     <div class="error">
-                        <strong>🔥 SUMMONING FAILED:</strong><br>
+                        <strong>SYSTEM ERROR:</strong><br>
                         ${error.message}
                     </div>
                 `;
                 
                 usersList.innerHTML = `
                     <div class="error">
-                        <strong>💀 THE ABYSS IS SILENT:</strong><br>
+                        <strong>CONNECTION FAILED:</strong><br>
                         ${error.message}<br><br>
-                        Ritual Requirements:<br>
+                        System Requirements:<br>
                         1. Verify API URL is correct<br>
                         2. Ensure Script ID exists<br>
-                        3. Sacrifice to the backend gods
+                        3. Backend is operational
                     </div>
                 `;
                 
@@ -831,7 +915,7 @@
             } finally {
                 isLoading = false;
                 loadBtn.disabled = false;
-                loadBtn.textContent = '🔥 SUMMON DATA';
+                loadBtn.textContent = 'INITIALIZE SYSTEM';
             }
         }
         
@@ -842,8 +926,8 @@
             currentView = 'global';
             isLoading = true;
             globalBtn.disabled = true;
-            globalBtn.textContent = 'SUMMONING UNDERWORLD...';
-            loadBtn.textContent = '📁 VIEW SCRIPT';
+            globalBtn.textContent = 'SCANNING GLOBAL...';
+            loadBtn.textContent = 'VIEW SCRIPT';
             
             const apiUrl = apiUrlInput.value.trim().replace(/\/$/, '');
             
@@ -855,14 +939,14 @@
                     // If /all-status doesn't exist, show instructions
                     usersList.innerHTML = `
                         <div class="users-header">
-                            <h3>💀 UNDERWORLD VIEW (ALL SCRIPTS)</h3>
+                            <h3>🌐 GLOBAL MATRIX VIEW</h3>
                         </div>
                         <div class="error">
-                            <strong>THE UNDERWORLD IS NOT YET CONQUERED</strong><br><br>
-                            To dominate all scripts, you must:<br>
-                            1. Create <code>/api/all-status.js</code> ritual<br>
-                            2. Deploy to the Vercel dimension<br><br>
-                            Currently viewing: <strong>${scriptIdInput.value || 'default'}</strong> script only
+                            <strong>GLOBAL VIEW UNAVAILABLE</strong><br><br>
+                            To enable global monitoring, you need to:<br>
+                            1. Create <code>/api/all-status.js</code> endpoint<br>
+                            2. Deploy to your backend<br><br>
+                            Currently showing: <strong>${scriptIdInput.value || 'default'}</strong> script only
                         </div>
                     `;
                     
@@ -884,19 +968,19 @@
                 // Update stats for global view
                 statsGrid.innerHTML = `
                     <div class="stat-card">
-                        <div class="stat-label">TOTAL DAMNED</div>
+                        <div class="stat-label">TOTAL USERS</div>
                         <div class="stat-value">${result.data.totalUsers || 0}</div>
-                        <div class="stat-label">Across All Realms</div>
+                        <div class="stat-label">Across All Scripts</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-label">ACTIVE CURSES</div>
+                        <div class="stat-label">ACTIVE SCRIPTS</div>
                         <div class="stat-value">${result.data.scripts?.length || 0}</div>
-                        <div class="stat-label">With Souls Online</div>
+                        <div class="stat-label">With Users Online</div>
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-label">Most Corrupted</div>
+                        <div class="stat-label">Most Popular</div>
                         <div class="stat-value" style="font-size: 1.8rem;">
                             ${result.data.scripts?.length > 0 ? result.data.scripts[0].scriptId : 'None'}
                         </div>
@@ -918,9 +1002,9 @@
                 
                 usersList.innerHTML = `
                     <div class="error">
-                        <strong>💀 UNDERWORLD SUMMONING FAILED:</strong><br>
+                        <strong>GLOBAL SCAN FAILED:</strong><br>
                         ${error.message}<br><br>
-                        Returning to single script view...
+                        Reverting to script view...
                     </div>
                 `;
                 
@@ -929,7 +1013,7 @@
             } finally {
                 isLoading = false;
                 globalBtn.disabled = false;
-                globalBtn.textContent = '💀 UNDERWORLD VIEW';
+                globalBtn.textContent = 'GLOBAL MATRIX';
             }
         }
         
@@ -941,9 +1025,9 @@
             
             statsGrid.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-label">SOULS ONLINE</div>
+                    <div class="stat-label">USERS ONLINE</div>
                     <div class="stat-value">${data.onlineCount || 0}</div>
-                    <div class="stat-label">In This Realm</div>
+                    <div class="stat-label">Current Script</div>
                 </div>
                 
                 <div class="stat-card">
@@ -953,7 +1037,7 @@
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-label">CURSE ID</div>
+                    <div class="stat-label">SCRIPT ID</div>
                     <div class="stat-value" style="font-size: 1.8rem;">${data.scriptId || 'default'}</div>
                     <div class="stat-label">Updated: ${lastUpdate}</div>
                 </div>
@@ -965,12 +1049,12 @@
             if (!data.detailedUsers || data.detailedUsers.length === 0) {
                 usersList.innerHTML = `
                     <div class="users-header">
-                        <h3>📋 CURSE: ${data.scriptId || 'default'}</h3>
-                        <span class="user-count">0 souls</span>
+                        <h3>📋 Script: ${data.scriptId || 'default'}</h3>
+                        <span class="user-count">0 users</span>
                     </div>
                     <div class="no-users">
-                        No damned souls currently online for curse "${data.scriptId}"<br>
-                        <small>Souls will appear here when they accept the curse</small>
+                        No users currently online for script "${data.scriptId}"<br>
+                        <small>Users will appear here when they run your script</small>
                     </div>
                 `;
                 return;
@@ -981,8 +1065,8 @@
             
             let usersHTML = `
                 <div class="users-header">
-                    <h3>📋 CURSE: ${data.scriptId || 'default'}</h3>
-                    <span class="user-count">${sortedUsers.length} souls</span>
+                    <h3>📋 Script: ${data.scriptId || 'default'}</h3>
+                    <span class="user-count">${sortedUsers.length} users</span>
                 </div>
                 <div class="user-cards">
             `;
@@ -1079,11 +1163,11 @@
             if (!data.scripts || data.scripts.length === 0) {
                 usersList.innerHTML = `
                     <div class="users-header">
-                        <h3>💀 UNDERWORLD VIEW (ALL CURSES)</h3>
+                        <h3>🌐 Global Matrix View (All Scripts)</h3>
                     </div>
                     <div class="no-users">
-                        No curses currently have souls online<br>
-                        <small>Curses will appear here when souls start using them</small>
+                        No scripts currently have users online<br>
+                        <small>Scripts will appear here when users start using them</small>
                     </div>
                 `;
                 return;
@@ -1094,8 +1178,8 @@
             
             let scriptsHTML = `
                 <div class="users-header">
-                    <h3>💀 UNDERWORLD VIEW (ALL CURSES)</h3>
-                    <span class="user-count">${data.totalUsers} total souls</span>
+                    <h3>🌐 Global Matrix View (All Scripts)</h3>
+                    <span class="user-count">${data.totalUsers} total users</span>
                 </div>
                 <div class="script-list">
             `;
@@ -1105,10 +1189,10 @@
                     <div class="script-card">
                         <div class="script-name">${script.scriptId}</div>
                         <div class="script-count">${script.onlineCount}</div>
-                        <div class="script-users">soul${script.onlineCount !== 1 ? 's' : ''} online</div>
+                        <div class="script-users">user${script.onlineCount !== 1 ? 's' : ''} online</div>
                         <button onclick="switchToScript('${script.scriptId}')" 
-                                style="margin-top: 10px; padding: 8px 16px; background: #ff0040; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: 'Courier New', monospace; text-transform: uppercase;">
-                            View Souls
+                                style="margin-top: 10px; padding: 8px 16px; background: var(--matrix-green); color: var(--matrix-black); border: none; border-radius: 6px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase;">
+                            View Users
                         </button>
                     </div>
                 `;
