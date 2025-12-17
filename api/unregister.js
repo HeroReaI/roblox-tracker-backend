@@ -11,11 +11,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, scriptId, sessionId } = req.body;
-    if (!userId || !scriptId || !sessionId) {
+    const { userId, scriptId } = req.body; // REMOVED sessionId requirement
+    if (!userId || !scriptId) {
       return res.status(400).json({
         success: false,
-        error: 'userId, scriptId, sessionId required'
+        error: 'userId and scriptId required'
       });
     }
 
@@ -25,19 +25,7 @@ export default async function handler(req, res) {
     const userKey = `script:${sanitizedScriptId}:user:${sanitizedUserId}`;
     const onlineKey = `script:${sanitizedScriptId}:online`;
 
-    const raw = await redis.get(userKey);
-    if (!raw) {
-      return res.json({ success: true, data: { removed: false } });
-    }
-
-    const parsed = JSON.parse(raw);
-    if (parsed.sessionId !== sessionId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Invalid session'
-      });
-    }
-
+    // Try to delete user data (don't check if it exists first)
     await redis.del(userKey);
     await redis.zrem(onlineKey, sanitizedUserId);
 
