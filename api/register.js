@@ -35,7 +35,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Sanitize inputs
     const sanitizedScriptId = scriptId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
     const sanitizedUserId = userId.substring(0, 100);
     
@@ -62,13 +61,9 @@ export default async function handler(req, res) {
       heartbeatCount: 1
     };
 
-    // Execute Redis operations
-    await redis.setex(key, 90, userData);
+    // CRITICAL: Store with 90-second TTL
+    await redis.setex(key, 90, JSON.stringify(userData));
     await redis.zadd(onlineSetKey, timestamp, sanitizedUserId);
-
-    // Cleanup old entries (older than 2 minutes)
-    const twoMinutesAgo = timestamp - 120000;
-    await redis.zremrangebyscore(onlineSetKey, 0, twoMinutesAgo);
 
     // Get current online count
     const onlineCount = await redis.zcard(onlineSetKey);
@@ -81,17 +76,16 @@ export default async function handler(req, res) {
         sessionId,
         onlineCount,
         nextHeartbeatIn: 30000,
-        timestamp
+        timestamp,
+        ttlSeconds: 90 // Inform client of TTL
       }
     });
 
   } catch (error) {
     console.error('Registration error:', error);
-
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Internal server error'
     });
   }
 }
